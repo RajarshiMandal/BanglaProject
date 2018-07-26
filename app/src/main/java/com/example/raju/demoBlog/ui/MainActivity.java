@@ -29,16 +29,7 @@ public class MainActivity extends AppCompatActivity {
         ItemAdapter adapter = new ItemAdapter();
         recyclerView.setAdapter(adapter);
 
-        mViewModel.getItemList().observe(this, adapter::submitList);
-//        mViewModel.getNetworkState().observe(this, networkState -> {
-//            if (networkState != null) {
-//                if (networkState.getStatus() == Status.ERROR) {
-//                    retryButton.setOnClickListener(view -> {
-//                        // todo: Implement what to do
-//                    });
-//                }
-//            }
-//        });
+        mViewModel.getItemListLiveData().observe(this, adapter::submitList);
 
     }
 

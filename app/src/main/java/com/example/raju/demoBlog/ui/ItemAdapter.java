@@ -32,8 +32,12 @@ public class ItemAdapter extends PagedListAdapter<Item, ItemAdapter.ItemViewHold
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         Item item = getItem(position);
-        Log.d(TAG, "onBindViewHolder: " + item.getItem_id());
-        Log.d(TAG, "onBindViewHolder: " + item.getTitle());
+        try {
+            Log.d(TAG, "onBindViewHolder: " + item.getTags());
+            Log.d(TAG, "onBindViewHolder: " + item.getItem_id());
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
         List<String> tags = item.getTags();
 
         String tag0 = "Tag 1", tag1 = "Tag 2";

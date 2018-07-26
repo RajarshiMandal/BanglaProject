@@ -37,19 +37,24 @@ public class Item {
             return oldItem.updatedAt.equals(newItem.updatedAt);
         }
     };
+
     @PrimaryKey(autoGenerate = true)
     private long item_id;
+
     @SerializedName("id")
     @Expose
     private String id;
+
     @ColumnInfo(name = "published_at")
     @SerializedName("published")
     @Expose
     private Date publishedAt;
+
     @ColumnInfo(name = "updated_at")
     @SerializedName("updated")
     @Expose
     private Date updatedAt;
+
     @ColumnInfo(name = "self_link")
     @SerializedName("selfLink")
     @Expose
@@ -62,6 +67,7 @@ public class Item {
     @SerializedName("title")
     @Expose
     private String title = "";
+
     @Ignore
     @SerializedName("labels")
     @Expose

@@ -7,13 +7,19 @@ import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 
 import com.example.raju.demoBlog.data.database.dao.ItemDao;
+import com.example.raju.demoBlog.data.database.dao.ItemTagsDao;
 import com.example.raju.demoBlog.data.database.dao.NextPageTokenDao;
+import com.example.raju.demoBlog.data.database.dao.TagDao;
 import com.example.raju.demoBlog.data.database.model.Item;
+import com.example.raju.demoBlog.data.database.model.ItemTagRelation;
 import com.example.raju.demoBlog.data.database.model.NextPageToken;
+import com.example.raju.demoBlog.data.database.model.Tag;
 
 @Database(entities = {
         Item.class,
-        NextPageToken.class
+        NextPageToken.class,
+        Tag.class,
+        ItemTagRelation.class
 },
         version = 1,
         exportSchema = false)
@@ -35,8 +41,11 @@ public abstract class AppDatabase extends RoomDatabase {
         return sInstance;
     }
 
-
     public abstract ItemDao itemDao();
 
     public abstract NextPageTokenDao nextPageTokenDao();
+
+    public abstract TagDao tagDao();
+
+    public abstract ItemTagsDao itemTagsDao();
 }
