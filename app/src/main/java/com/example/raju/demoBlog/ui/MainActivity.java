@@ -10,7 +10,6 @@ import android.widget.Button;
 
 import com.example.raju.demoBlog.R;
 import com.example.raju.demoBlog.ServiceLocator;
-import com.example.raju.demoBlog.data.network.Status;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,15 +30,15 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         mViewModel.getItemList().observe(this, adapter::submitList);
-        mViewModel.getNetworkState().observe(this, networkState -> {
-            if (networkState != null) {
-                if (networkState.getStatus() == Status.ERROR) {
-                    retryButton.setOnClickListener(view -> {
-                        // todo: Implement what to do
-                    });
-                }
-            }
-        });
+//        mViewModel.getNetworkState().observe(this, networkState -> {
+//            if (networkState != null) {
+//                if (networkState.getStatus() == Status.ERROR) {
+//                    retryButton.setOnClickListener(view -> {
+//                        // todo: Implement what to do
+//                    });
+//                }
+//            }
+//        });
 
     }
 

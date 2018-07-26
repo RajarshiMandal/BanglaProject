@@ -30,9 +30,7 @@ public class ServiceLocator {
     }
 
     public static ItemViewModelFactory provideViewModelFactory(Context context) {
-        return new ItemViewModelFactory(
-                provideApiRepository(context),
-                provideExecutors());
+        return new ItemViewModelFactory(provideApiRepository(context));
     }
 
 

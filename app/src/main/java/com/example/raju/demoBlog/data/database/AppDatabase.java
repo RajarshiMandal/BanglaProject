@@ -5,12 +5,16 @@ import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
-import android.nfc.Tag;
 
 import com.example.raju.demoBlog.data.database.dao.ItemDao;
+import com.example.raju.demoBlog.data.database.dao.NextPageTokenDao;
 import com.example.raju.demoBlog.data.database.model.Item;
+import com.example.raju.demoBlog.data.database.model.NextPageToken;
 
-@Database(entities = {Item.class},
+@Database(entities = {
+        Item.class,
+        NextPageToken.class
+},
         version = 1,
         exportSchema = false)
 @TypeConverters(DateConverter.class)
@@ -35,4 +39,5 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public abstract ItemDao itemDao();
 
+    public abstract NextPageTokenDao nextPageTokenDao();
 }

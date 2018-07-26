@@ -1,37 +1,39 @@
 package com.example.raju.demoBlog.ui;
 
 import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
+import android.arch.paging.DataSource;
+import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
 
-import com.example.raju.demoBlog.AppExecutors;
 import com.example.raju.demoBlog.data.ApiRepository;
-import com.example.raju.demoBlog.data.network.NetworkState;
+import com.example.raju.demoBlog.data.ItemBoundaryCallBack;
 import com.example.raju.demoBlog.data.database.model.Item;
-
-import java.util.List;
 
 public class ItemViewModel extends ViewModel {
 
-    private AppExecutors mExecutors;
-    private ApiRepository mApiRepository;
-    private LiveData<PagedList<Item>> mItemListObservable;
-    private LiveData<NetworkState> mNetworkStateObservable;
+    private final ApiRepository mApiRepository;
+    private final LiveData<PagedList<Item>> mItemListObservable;
+    private final DataSource.Factory<Integer, Item> sourceFactory;
 
-    public ItemViewModel(ApiRepository apiRepository, AppExecutors executors) {
+    private final ItemBoundaryCallBack boundaryCallBack;
+
+    public ItemViewModel(ApiRepository apiRepository) {
         mApiRepository = apiRepository;
-        mExecutors = executors;
-        mItemListObservable = mApiRepository.getItemListLiveData();
-        mNetworkStateObservable = mApiRepository.getNetworkStateLiveData();
+
+        boundaryCallBack = new ItemBoundaryCallBack(mApiRepository);
+        PagedList.Config pageConfig = new PagedList.Config.Builder()
+                .setPageSize(10)
+                .setEnablePlaceholders(true)
+                .build();
+        sourceFactory = mApiRepository.getDataSourceFactory();
+        mItemListObservable = new LivePagedListBuilder<>(sourceFactory, pageConfig)
+                .setBoundaryCallback(boundaryCallBack)
+                .build();
     }
 
     public LiveData<PagedList<Item>> getItemList() {
         return mItemListObservable;
     }
 
-    public LiveData<NetworkState> getNetworkState() {
-        return mNetworkStateObservable;
-    }
 }
