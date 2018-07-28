@@ -1,7 +1,8 @@
 package com.example.raju.demoBlog.data;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.arch.paging.DataSource;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.example.raju.demoBlog.AppExecutors;
@@ -10,19 +11,21 @@ import com.example.raju.demoBlog.data.database.dao.ItemDao;
 import com.example.raju.demoBlog.data.database.dao.ItemTagsDao;
 import com.example.raju.demoBlog.data.database.dao.NextPageTokenDao;
 import com.example.raju.demoBlog.data.database.dao.TagDao;
-import com.example.raju.demoBlog.data.database.model.BloggerApi;
+import com.example.raju.demoBlog.data.database.model.BaseModel;
 import com.example.raju.demoBlog.data.database.model.Item;
 import com.example.raju.demoBlog.data.database.model.ItemTagRelation;
 import com.example.raju.demoBlog.data.database.model.NextPageToken;
 import com.example.raju.demoBlog.data.database.model.Tag;
+import com.example.raju.demoBlog.data.network.ApiCallback;
 import com.example.raju.demoBlog.data.network.ApiClient;
+import com.example.raju.demoBlog.data.network.NetworkState;
+import com.example.raju.demoBlog.data.network.RetryCallback;
+import com.example.raju.demoBlog.ui.recyclerview.RetryListener;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class ApiRepository {
 
@@ -39,7 +42,14 @@ public class ApiRepository {
     private final ItemTagsDao itemTagsDao;
     private final TagDao tagDao;
 
+    private final MutableLiveData<NetworkState> networkStateObservable;
+    private final AppDatabase database;
+
+    private RetryCallback<BaseModel> retryCallback;
+    private RetryListener listener;
+
     private ApiRepository(ApiClient client, AppDatabase database, AppExecutors executors) {
+        this.database = database;
         mClient = client;
         mExecutors = executors;
         nextPageTokenDao = database.nextPageTokenDao();
@@ -47,6 +57,7 @@ public class ApiRepository {
         tagDao = database.tagDao();
         itemTagsDao = database.itemTagsDao();
 
+        networkStateObservable = new MutableLiveData<>();
     }
 
     public static ApiRepository getInstance(ApiClient client, AppDatabase database, AppExecutors executors) {
@@ -61,8 +72,9 @@ public class ApiRepository {
     }
 
     public void getFirstCallback() {
-        if (isFetchNeeded()) // Todo can be useful for checking new content if removed
+        if (isFetchNeeded()) {
             mClient.fetchFirstNetworkCall().enqueue(getRetrofitCallback());
+        }
     }
 
     private boolean isFetchNeeded() {
@@ -77,8 +89,10 @@ public class ApiRepository {
 
     public void getNextCallbacks() {
         String nextPageToken = getDbPageToken();
-        if (nextPageToken != null)
+        if (nextPageToken != null) {
+            networkStateObservable.setValue(NetworkState.LOADING);
             mClient.fetchNextNetworkCall(nextPageToken).enqueue(getRetrofitCallback());
+        }
     }
 
     private String getDbPageToken() {
@@ -91,52 +105,58 @@ public class ApiRepository {
         return nextPageToken;
     }
 
-    private Callback<BloggerApi> getRetrofitCallback() {
-        return new Callback<BloggerApi>() {
+    private ApiCallback<BaseModel> getRetrofitCallback() {
+        networkStateObservable.setValue(NetworkState.LOADING);
+        return new ApiCallback<BaseModel>() {
+
             @Override
-            public void onResponse(@NonNull Call<BloggerApi> call, @NonNull Response<BloggerApi> response) {
-                if (response.isSuccessful()) {
-                    BloggerApi responseBody = response.body();
-                    if (responseBody != null) {
-                        mExecutors.diskIO().execute(() -> {
-                            insertAllToDb(responseBody);
-                        });
-                    }
+            protected void onSuccess(final BaseModel responseBody) {
+                if (responseBody != null) {
+                    mExecutors.diskIO().execute(() -> {
+                        networkStateObservable.postValue(NetworkState.SAVING);
+                        insertAllToDb(responseBody);
+                        networkStateObservable.postValue(NetworkState.SUCCESS);
+                    });
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<BloggerApi> call, @NonNull Throwable t) {
-                Log.d(TAG, "onFailure: " + t.getMessage());
+            protected void onError(Call<BaseModel> call, String s) {
+                networkStateObservable.setValue(NetworkState.Error(s));
+                retryCallback.getCall(call, this, networkStateObservable);
             }
         };
     }
 
-    private void insertAllToDb(BloggerApi responseBody) {
+    private void insertAllToDb(BaseModel responseBody) {
         List<Item> items = responseBody.getItems();
-        if (items != null && !items.isEmpty()) {
-            insertNextPageToken(responseBody.getNextPageToken());
+        // Check for empty body
+        if (items == null || items.isEmpty()) return;
 
-            List<Long> itemIds = insertItemList(items);
-            for (int i = 0; i < items.size(); i++) {
-                long itemId = itemIds.get(i);
-                // Check if no duplicate Items are inserted
-                if (itemId != -1) {
-                    List<String> labelNames = items.get(i).getTags();
-                    for (String labelName : labelNames) {
-                        // Insert Tag Names
-                        insertTags(labelName);
-                        // Get the id of the tag name
-                        int tagId = fetchTagId(labelName);
-                        // Insert the relational database
-                        insetItemTagRelation(itemId, tagId);
-                    }
-                } else {
-                    Log.d(TAG, "insertItemsToDb: failed " + items.get(i).getTitle());
+        insertNextPageToken(responseBody.getNextPageToken());
+        List<Long> itemIds = insertItemList(items);
+        for (int i = 0; i < items.size(); i++) {
+            long itemId = itemIds.get(i);
+            // Check if no duplicate Items are inserted
+            if (itemId != -1) {
+                List<String> labelNames = items.get(i).getTags();
+                for (String labelName : labelNames) {
+                    // Insert Tag Names
+                    insertTags(labelName);
+                    // Get the id of the tag name
+                    int tagId = fetchTagId(labelName);
+                    // Insert the relational database
+                    insetItemTagRelation(itemId, tagId);
                 }
+            } else {
+                Log.d(TAG, "insertItemsToDb: failed " + items.get(i).getTitle());
             }
         }
     }
+
+    /*
+     * Database helper methods
+     */
 
     private void insertNextPageToken(String nextPageToken) {
         nextPageTokenDao.insertNextPageToken(new NextPageToken(nextPageToken));
@@ -158,6 +178,10 @@ public class ApiRepository {
         itemTagsDao.insetItemTagRelation(new ItemTagRelation(item_id, tag_id));
     }
 
+    /*
+     * Publicly available getters and setters
+     */
+
     public DataSource.Factory<Integer, Item> getDataSourceFactory() {
         return itemDao.fetchAllItems();
     }
@@ -168,5 +192,17 @@ public class ApiRepository {
 
     public AppExecutors getExecutors() {
         return mExecutors;
+    }
+
+    public LiveData<NetworkState> getNetworkStateObservable() {
+        return networkStateObservable;
+    }
+
+    public void setRetryCallback(RetryCallback<BaseModel> retryCallback) {
+        this.retryCallback = retryCallback;
+    }
+
+    public AppDatabase getDatabase() {
+        return database;
     }
 }

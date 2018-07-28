@@ -8,42 +8,43 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AppExecutors {
+public enum AppExecutors {
 
-    // For Singleton instantiation
-    private static final Object LOCK = new Object();
-    private static AppExecutors sInstance;
+    APP_EXECUTORS(
+            Executors.newSingleThreadExecutor(),
+            Executors.newFixedThreadPool(3),
+            new MainThreadExecutor()
+    );
+
     private final ExecutorService diskIO;
     private final Executor mainThread;
     private final ExecutorService networkIO;
 
-    private AppExecutors(ExecutorService diskIO, ExecutorService networkIO, Executor mainThread) {
+    AppExecutors(ExecutorService diskIO, ExecutorService networkIO, Executor mainThread) {
         this.diskIO = diskIO;
         this.networkIO = networkIO;
         this.mainThread = mainThread;
     }
 
-    public static AppExecutors getInstance() {
-        if (sInstance == null) {
-            synchronized (LOCK) {
-                sInstance = new AppExecutors(Executors.newSingleThreadExecutor(),
-                        Executors.newFixedThreadPool(3),
-                        new MainThreadExecutor());
-            }
-        }
-        return sInstance;
-    }
-
+    /**
+     * For single threaded execution
+     */
     public ExecutorService diskIO() {
         return diskIO;
     }
 
-    public Executor mainThread() {
-        return mainThread;
-    }
-
+    /**
+     * For multithreaded execution
+     */
     public ExecutorService networkIO() {
         return networkIO;
+    }
+
+    /**
+     * Threading for execution on main
+     */
+    public Executor mainThread() {
+        return mainThread;
     }
 
     private static class MainThreadExecutor implements Executor {

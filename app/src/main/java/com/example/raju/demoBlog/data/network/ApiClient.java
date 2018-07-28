@@ -1,40 +1,48 @@
 package com.example.raju.demoBlog.data.network;
 
-import com.example.raju.demoBlog.data.database.model.BloggerApi;
+import com.example.raju.demoBlog.Utils.UrlUtils;
+import com.example.raju.demoBlog.data.database.model.BaseModel;
 
 import retrofit2.Call;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ApiClient {
+public enum ApiClient {
 
-    private static final String TAG = ApiClient.class.getSimpleName();
-
-    private static final Object LOCK = new Object();
-    private static ApiClient sInstance;
+    API_CLIENT(RetrofitFactory.RETROFIT_FACTORY.getRetrofit());
 
     private BloggerService mBloggerService;
 
-    private ApiClient(Retrofit retrofit) {
+    ApiClient(Retrofit retrofit) {
         mBloggerService = retrofit.create(BloggerService.class);
     }
 
-    public static ApiClient getInstance(Retrofit retrofit) {
-        if (sInstance == null) {
-            synchronized (LOCK) {
-                if (sInstance == null) {
-                    sInstance = new ApiClient(retrofit);
-                }
-            }
+    public Call<BaseModel> fetchFirstNetworkCall() {
+        return mBloggerService.getFirstCallItems();
+    }
+
+    public Call<BaseModel> fetchNextNetworkCall(String nextPageToken) {
+        return mBloggerService.getNextCallItems(nextPageToken);
+    }
+
+    /*
+     * Factory for creating and providing Retrofit single instance
+     */
+    private enum RetrofitFactory {
+        RETROFIT_FACTORY;
+
+        Retrofit getRetrofit() {
+            return new Retrofit.Builder()
+                    .baseUrl(UrlUtils.BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
         }
-        return sInstance;
-    }
 
-    public Call<BloggerApi> fetchFirstNetworkCall() {
-        return mBloggerService.getFirstApiItems();
-    }
-
-    public Call<BloggerApi> fetchNextNetworkCall(String nextPageToken) {
-        return mBloggerService.getNextApiItems(nextPageToken);
+//        public Gson getGson() {
+//            return new GsonBuilder()
+//                    .setDateFormat("yyyy-MM-dd'T'HH:mm:ssX")
+//                    .create();
+//        }
     }
 
 }

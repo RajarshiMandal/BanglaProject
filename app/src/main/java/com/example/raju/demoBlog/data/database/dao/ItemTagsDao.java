@@ -12,10 +12,10 @@ import java.util.List;
 @Dao
 public interface ItemTagsDao {
 
-    @Query("SELECT tag_name FROM item_tag INNER JOIN tag ON tag_id = id AND item_id = :itemId")
-    List<String> fetchTagNameById(long itemId);
-
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insetItemTagRelation(ItemTagRelation itemTagRelation);
+
+    @Query("SELECT tag_name FROM item_tag INNER JOIN tag ON tag_id = id AND item_id = :itemId")
+    List<String> fetchTagNameById(long itemId);
 
 }

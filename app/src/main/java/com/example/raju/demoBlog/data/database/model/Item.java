@@ -55,7 +55,7 @@ public class Item {
     @Expose
     private Date updatedAt;
 
-    @ColumnInfo(name = "self_link")
+    @Ignore
     @SerializedName("selfLink")
     @Expose
     private String selfLink;
@@ -130,6 +130,7 @@ public class Item {
         this.tags = tags;
     }
 
+    // todo: for testing only delete this
     @Override
     public String toString() {
         return "Item{" +

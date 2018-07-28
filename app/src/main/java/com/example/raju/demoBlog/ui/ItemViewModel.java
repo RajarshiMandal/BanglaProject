@@ -1,7 +1,6 @@
 package com.example.raju.demoBlog.ui;
 
 import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
@@ -11,23 +10,19 @@ import android.arch.paging.PagedList;
 
 import com.example.raju.demoBlog.data.ApiRepository;
 import com.example.raju.demoBlog.data.ItemBoundaryCallBack;
+import com.example.raju.demoBlog.data.database.model.BaseModel;
 import com.example.raju.demoBlog.data.database.model.Item;
-
-import java.util.List;
+import com.example.raju.demoBlog.data.network.NetworkState;
+import com.example.raju.demoBlog.data.network.RetryCallback;
 
 public class ItemViewModel extends ViewModel {
 
     private final static String TAG = ItemViewModel.class.getSimpleName();
 
     private final ApiRepository mApiRepository;
-
     private LiveData<PagedList<Item>> itemListLiveData;
-    private LiveData<List<String>> tagListLiveData;
-
     private final DataSource.Factory<Integer, Item> sourceFactory;
     private final ItemBoundaryCallBack boundaryCallBack;
-
-    MediatorLiveData<PagedList<Item>> mediatorLiveData;
 
     public ItemViewModel(ApiRepository apiRepository) {
         mApiRepository = apiRepository;
@@ -35,6 +30,7 @@ public class ItemViewModel extends ViewModel {
         boundaryCallBack = new ItemBoundaryCallBack(mApiRepository);
         PagedList.Config pageConfig = new PagedList.Config.Builder()
                 .setPageSize(10)
+                // todo: configure this as last
                 .setEnablePlaceholders(true)
                 .build();
         sourceFactory = mApiRepository.getDataSourceFactory();
@@ -77,7 +73,19 @@ public class ItemViewModel extends ViewModel {
         return itemListLiveData;
     }
 
-    public LiveData<PagedList<Item>> getMediatorLiveData() {
-        return mediatorLiveData;
+    public LiveData<NetworkState> getNetworkStateLiveData() {
+        return mApiRepository.getNetworkStateObservable();
+    }
+
+    public void setRetryCallback(RetryCallback<BaseModel> retryCallback) {
+        mApiRepository.setRetryCallback(retryCallback);
+    }
+
+    public DataSource.Factory<Integer, Item> getSourceFactory() {
+        return sourceFactory;
+    }
+
+    public ApiRepository getApiRepository() {
+        return mApiRepository;
     }
 }

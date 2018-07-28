@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">A Demo Blog App</string>
+    <string name="network_state_warning">Connection Problem</string>
+    <string name="retry">Retry</string>
 </resources>

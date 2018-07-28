@@ -10,10 +10,10 @@ import com.example.raju.demoBlog.data.database.model.Tag;
 @Dao
 public interface TagDao {
 
-    @Query("SELECT id FROM tag WHERE tag_name = :labelName")
-    int fetchIdByTagName(String labelName);
-
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insetTagName(Tag tagName);
+
+    @Query("SELECT id FROM tag WHERE tag_name = :labelName")
+    int fetchIdByTagName(String labelName);
 
 }

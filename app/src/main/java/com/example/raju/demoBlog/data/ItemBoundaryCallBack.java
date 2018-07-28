@@ -7,7 +7,6 @@ import com.example.raju.demoBlog.data.database.model.Item;
 
 public class ItemBoundaryCallBack extends PagedList.BoundaryCallback<Item> {
 
-    private static final String TAG = ItemBoundaryCallBack.class.getSimpleName();
     private final ApiRepository mRepository;
 
     public ItemBoundaryCallBack(ApiRepository repository) {

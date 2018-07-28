@@ -1,13 +1,12 @@
 package com.example.raju.demoBlog.data.database.model;
 
-import android.text.TextUtils;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class BloggerApi {
+public class BaseModel {
+
     @SerializedName("nextPageToken")
     @Expose
     private String nextPageToken;
@@ -15,7 +14,6 @@ public class BloggerApi {
     @SerializedName("items")
     @Expose
     private List<Item> items = null;
-
 
     public String getNextPageToken() {
         return nextPageToken;
@@ -31,10 +29,6 @@ public class BloggerApi {
 
     public void setItems(List<Item> items) {
         this.items = items;
-    }
-
-    public boolean hasNextPageToken() {
-        return TextUtils.isEmpty(nextPageToken);
     }
 
 }

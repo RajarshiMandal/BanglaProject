@@ -3,5 +3,7 @@ package com.example.raju.demoBlog.data.network;
 public enum Status {
     LOADING,
     SUCCESS,
-    ERROR
+    ERROR,
+    RETRY,
+    SAVING
 }
