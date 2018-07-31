@@ -4,12 +4,12 @@ import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProvider;
 import android.support.annotation.NonNull;
 
-import com.example.raju.demoBlog.data.ApiRepository;
+import com.example.raju.demoBlog.data.ItemRepository;
 
 public class ItemViewModelFactory extends ViewModelProvider.NewInstanceFactory {
-    private final ApiRepository mApiRepository;
+    private final ItemRepository mApiRepository;
 
-    public ItemViewModelFactory(ApiRepository apiRepository) {
+    public ItemViewModelFactory(ItemRepository apiRepository) {
         mApiRepository = apiRepository;
     }
 

@@ -8,8 +8,8 @@ import android.arch.paging.DataSource;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
 
-import com.example.raju.demoBlog.data.ApiRepository;
 import com.example.raju.demoBlog.data.ItemBoundaryCallBack;
+import com.example.raju.demoBlog.data.ItemRepository;
 import com.example.raju.demoBlog.data.database.model.BaseModel;
 import com.example.raju.demoBlog.data.database.model.Item;
 import com.example.raju.demoBlog.data.network.NetworkState;
@@ -19,26 +19,26 @@ public class ItemViewModel extends ViewModel {
 
     private final static String TAG = ItemViewModel.class.getSimpleName();
 
-    private final ApiRepository mApiRepository;
-    private LiveData<PagedList<Item>> itemListLiveData;
-    private final DataSource.Factory<Integer, Item> sourceFactory;
-    private final ItemBoundaryCallBack boundaryCallBack;
+    private final ItemRepository mApiRepository;
+    private LiveData<PagedList<Item>> mItemListLiveData;
+    private final DataSource.Factory<Integer, Item> mSourceFactory;
 
-    public ItemViewModel(ApiRepository apiRepository) {
+    public ItemViewModel(ItemRepository apiRepository) {
         mApiRepository = apiRepository;
 
-        boundaryCallBack = new ItemBoundaryCallBack(mApiRepository);
+        ItemBoundaryCallBack boundaryCallBack = new ItemBoundaryCallBack(mApiRepository);
         PagedList.Config pageConfig = new PagedList.Config.Builder()
                 .setPageSize(10)
-                // todo: configure this as last
                 .setEnablePlaceholders(true)
                 .build();
-        sourceFactory = mApiRepository.getDataSourceFactory();
-        itemListLiveData = new LivePagedListBuilder<>(sourceFactory, pageConfig)
-                .setBoundaryCallback(boundaryCallBack)
-                .build();
+        mSourceFactory = mApiRepository.getDataSourceFactory();
+        if (mItemListLiveData == null) {
+            mItemListLiveData = new LivePagedListBuilder<>(mSourceFactory, pageConfig)
+                    .setBoundaryCallback(boundaryCallBack)
+                    .build();
+        }
 
-        itemListLiveData = Transformations.switchMap(itemListLiveData, pagedList -> {
+        mItemListLiveData = Transformations.switchMap(mItemListLiveData, pagedList -> {
             MutableLiveData<PagedList<Item>> mutableLiveData = new MutableLiveData<>();
             mApiRepository.getExecutors().diskIO().execute(() -> {
                 for (Item item : pagedList) {
@@ -50,7 +50,7 @@ public class ItemViewModel extends ViewModel {
         });
 
 //        // For TAG RETURNING AS LIVEDATA
-//        itemListLiveData = Transformations.switchMap(itemListLiveData, new Function<PagedList<Item>, LiveData<PagedList<Item>>>() {
+//        mItemListLiveData = Transformations.switchMap(mItemListLiveData, new Function<PagedList<Item>, LiveData<PagedList<Item>>>() {
 //            @Override
 //            public LiveData<PagedList<Item>> apply(PagedList<Item> input) {
 //                MediatorLiveData<PagedList<Item>> tagMediator = new MediatorLiveData<>();
@@ -70,7 +70,7 @@ public class ItemViewModel extends ViewModel {
     }
 
     public LiveData<PagedList<Item>> getItemListLiveData() {
-        return itemListLiveData;
+        return mItemListLiveData;
     }
 
     public LiveData<NetworkState> getNetworkStateLiveData() {
@@ -82,10 +82,10 @@ public class ItemViewModel extends ViewModel {
     }
 
     public DataSource.Factory<Integer, Item> getSourceFactory() {
-        return sourceFactory;
+        return mSourceFactory;
     }
 
-    public ApiRepository getApiRepository() {
+    public ItemRepository getApiRepository() {
         return mApiRepository;
     }
 }

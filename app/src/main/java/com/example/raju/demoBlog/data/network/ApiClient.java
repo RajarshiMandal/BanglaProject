@@ -2,6 +2,7 @@ package com.example.raju.demoBlog.data.network;
 
 import com.example.raju.demoBlog.Utils.UrlUtils;
 import com.example.raju.demoBlog.data.database.model.BaseModel;
+import com.example.raju.demoBlog.data.database.model.SingleItem;
 
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -17,12 +18,16 @@ public enum ApiClient {
         mBloggerService = retrofit.create(BloggerService.class);
     }
 
-    public Call<BaseModel> fetchFirstNetworkCall() {
+    public Call<BaseModel> getFirstNetworkCall() {
         return mBloggerService.getFirstCallItems();
     }
 
-    public Call<BaseModel> fetchNextNetworkCall(String nextPageToken) {
+    public Call<BaseModel> getNextNetworkCall(String nextPageToken) {
         return mBloggerService.getNextCallItems(nextPageToken);
+    }
+
+    public Call<SingleItem> getSingleItemCall(String contentId) {
+        return mBloggerService.getSingleCallItem(contentId);
     }
 
     /*

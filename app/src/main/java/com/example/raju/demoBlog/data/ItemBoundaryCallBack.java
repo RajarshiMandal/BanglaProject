@@ -7,9 +7,9 @@ import com.example.raju.demoBlog.data.database.model.Item;
 
 public class ItemBoundaryCallBack extends PagedList.BoundaryCallback<Item> {
 
-    private final ApiRepository mRepository;
+    private final ItemRepository mRepository;
 
-    public ItemBoundaryCallBack(ApiRepository repository) {
+    public ItemBoundaryCallBack(ItemRepository repository) {
         mRepository = repository;
     }
 

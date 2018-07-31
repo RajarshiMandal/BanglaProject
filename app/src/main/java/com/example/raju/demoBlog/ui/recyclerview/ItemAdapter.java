@@ -3,6 +3,7 @@ package com.example.raju.demoBlog.ui.recyclerview;
 import android.arch.paging.PagedListAdapter;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,8 @@ import com.example.raju.demoBlog.R;
 import com.example.raju.demoBlog.data.database.model.Item;
 import com.example.raju.demoBlog.data.network.NetworkState;
 
+import java.util.List;
+
 public class ItemAdapter extends PagedListAdapter<Item, RecyclerView.ViewHolder> {
 
     private static final String TAG = ItemAdapter.class.getSimpleName();
@@ -18,6 +21,7 @@ public class ItemAdapter extends PagedListAdapter<Item, RecyclerView.ViewHolder>
     private final int mItemListView = R.layout.list_item;
     private NetworkState networkState;
     private RetryListener listener;
+    private int mCount;
 
     public ItemAdapter() {
         super(Item.DIFF_CALLBACK);
@@ -45,12 +49,37 @@ public class ItemAdapter extends PagedListAdapter<Item, RecyclerView.ViewHolder>
         switch (getItemViewType(position)) {
             case mItemListView:
                 Item item = getItem(position);
-                ((ItemViewHolder) holder).bind(item);
+                if (item == null) return;
+                // Setting the tags
+                String[] tagsToSet = getTags(item);
+                // Setting the visibility
+                int visibility = getChipVisibility(tagsToSet[1]);
+                ((ItemViewHolder) holder).bind(item, tagsToSet[0], tagsToSet[1], visibility);
                 break;
             case mNetworkStateView:
                 ((NetworkStateViewHolder) holder).bind(networkState);
                 break;
+            default:
+                throw new IllegalArgumentException("unknown holder for position " + position);
         }
+    }
+
+    private int getChipVisibility(String str) {
+        int visibility = 0;
+        if (TextUtils.isEmpty(str)) visibility = View.GONE;
+        return visibility;
+    }
+
+    @NonNull
+    private String[] getTags(Item item) {
+        List<String> tagList = item.getTags();
+        String[] tagsToSet = new String[2];
+        tagsToSet[0] = "Oops";
+        tagsToSet[1] = "";
+        for (int i = 0; i < tagList.size(); i++) {
+            tagsToSet[i] = tagList.get(i);
+        }
+        return tagsToSet;
     }
 
     @Override
@@ -69,8 +98,11 @@ public class ItemAdapter extends PagedListAdapter<Item, RecyclerView.ViewHolder>
 
     public void setNetworkState(NetworkState newNetworkState) {
         NetworkState previousState = networkState;
-        boolean hadExtraRow = hasExtraRow(); //false
-        networkState = newNetworkState;//loading
+        // Check if the previous row had success
+        boolean hadExtraRow = hasExtraRow();
+        // Set the new state
+        networkState = newNetworkState;
+        // Check if the new state
         boolean hasExtraRow = hasExtraRow(); //true
         if (hadExtraRow != hasExtraRow) {
             if (hadExtraRow) {
@@ -90,86 +122,4 @@ public class ItemAdapter extends PagedListAdapter<Item, RecyclerView.ViewHolder>
     public void setListener(RetryListener listener) {
         this.listener = listener;
     }
-
-    //    static class ItemViewHolder extends RecyclerView.ViewHolder {
-//
-//        private final TextView titleView;
-//        private TextView[] tagViews = new TextView[2];
-//        //        private final TextView label1;
-//
-//        ItemViewHolder(View itemView) {
-//            super(itemView);
-//            titleView = itemView.findViewById(R.id.item_title);
-//            tagViews[0] = itemView.findViewById(R.id.tag0);
-//            tagViews[1] = itemView.findViewById(R.id.tag1);
-//
-//        }
-//
-//        void bind(Item item) {
-//            // Get the position while binding
-////            position = getAdapterPosition();
-//
-////            apiId = item.getItem_id();
-////            callId = item.getId();
-//
-//            titleView.setText(item.getTitle());
-//            List<String> tags = item.getTags();
-//            // Get the list size and set it to maximum 2
-//            int finalSize = tags.size() > 2 ? 2 : 1;
-//            for (int i = 0; i < finalSize; i++) {
-//                tagViews[i].setText(tags.get(i));
-//            }
-//        }
-//    }
-//
-//    class NetworkStateViewHolder extends RecyclerView.ViewHolder {
-//    private final ProgressBar progressBar;
-//    private final View errorView;
-//    private final TextView infoMessageView;
-//
-//    NetworkStateViewHolder(View itemView) {
-//        super(itemView);
-//        progressBar = itemView.findViewById(R.id.progressbar);
-//        errorView = itemView.findViewById(R.id.error_view);
-//        infoMessageView = itemView.findViewById(R.id.info_view);
-//        Button retryButton = itemView.findViewById(R.id.retry_button);
-//
-//    }
-//
-//    void bind(NetworkState networkState) {
-//        String infoMessage = networkState.getMessage();
-//        Log.d(TAG, "bind: " + infoMessage);
-//        progressBar.setVisibility(progressbarVisibility(networkState));
-//        errorView.setVisibility(errorVisibility(networkState));
-//        infoMessageView.setText(infoMessage);
-//    }
-//
-//    private int progressbarVisibility(NetworkState shouldShow) {
-//        switch (shouldShow.getStatus()) {
-//            case SUCCESS:
-//                return View.GONE;
-//            case ERROR:
-//                return View.GONE;
-//            default:
-//                return View.VISIBLE;
-//        }
-//    }
-//
-//    private int errorVisibility(NetworkState shouldShow) {
-//        switch (shouldShow.getStatus()) {
-//            case ERROR:
-//                return View.VISIBLE;
-//            default:
-//                return View.GONE;
-//        }
-//    }
-//
-////    private int visibility(boolean shouldShow) {
-////        switch (shouldShow)
-////        if (shouldShow)
-////            return View.VISIBLE;
-////        else
-////            return View.GONE;
-////    }
-//}
 }

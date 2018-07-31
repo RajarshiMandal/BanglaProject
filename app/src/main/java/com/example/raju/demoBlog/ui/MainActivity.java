@@ -9,7 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.widget.Button;
 
 import com.example.raju.demoBlog.R;
-import com.example.raju.demoBlog.ServiceLocator;
+import com.example.raju.demoBlog.Utils.ServiceLocator;
 import com.example.raju.demoBlog.data.network.NetworkState;
 import com.example.raju.demoBlog.data.network.Status;
 import com.example.raju.demoBlog.ui.recyclerview.ItemAdapter;
@@ -28,13 +28,14 @@ public class MainActivity extends AppCompatActivity {
 
         initViewModel(this);
         initRecyclerView();
-        observeViewModel(adapter);
+        observeViewModel();
 
         retryButton.setOnClickListener(view -> {
-            ServiceLocator.SERVICE_LOCATOR.provideExecutors().diskIO().execute(() -> {
+            ServiceLocator.INSTANCE.provideExecutors().diskIO().execute(() -> {
                 viewModel.getApiRepository().getDatabase().clearAllTables();
                 viewModel.getSourceFactory().create().invalidate();
             });
+
         });
     }
 
@@ -46,19 +47,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initViewModel(Context context) {
-        ItemViewModelFactory factory = ServiceLocator.SERVICE_LOCATOR.provideViewModelFactory(context);
+        ItemViewModelFactory factory = ServiceLocator.INSTANCE.provideViewModelFactory(context);
         viewModel = ViewModelProviders.of(this, factory).get(ItemViewModel.class);
     }
 
-    private void observeViewModel(ItemAdapter adapter) {
-        // Observe list of Items
-        viewModel.getItemListLiveData().observe(this, adapter::submitList);
+    private void observeViewModel() {
         // Observe network states
         viewModel.getNetworkStateLiveData().observe(this, networkState -> {
             adapter.setNetworkState(networkState);
             // Setting up Retry Callback
             if (networkState == null) return;
-
             if (networkState.getStatus() == Status.ERROR) {
                 viewModel.setRetryCallback((call, callback, networkStateObserver) ->
                         adapter.setListener(() -> {
@@ -69,5 +67,7 @@ public class MainActivity extends AppCompatActivity {
                 );
             }
         });
+        // Observe list of Items
+        viewModel.getItemListLiveData().observe(this, adapter::submitList);
     }
 }

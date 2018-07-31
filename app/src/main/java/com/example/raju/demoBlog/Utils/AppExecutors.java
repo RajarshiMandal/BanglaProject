@@ -1,4 +1,4 @@
-package com.example.raju.demoBlog;
+package com.example.raju.demoBlog.Utils;
 
 import android.os.Handler;
 import android.os.Looper;

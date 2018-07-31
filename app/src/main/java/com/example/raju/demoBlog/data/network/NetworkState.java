@@ -8,7 +8,7 @@ public class NetworkState {
     private Status status;
     private String message;
 
-    public static final NetworkState LOADING = new NetworkState(Status.LOADING, "loading");
+    public static final NetworkState LOADING = new NetworkState(Status.LOADING, "Loading");
     public static final NetworkState SUCCESS = new NetworkState(Status.SUCCESS);
     public static final NetworkState SAVING = new NetworkState(Status.SAVING, "Getting Ready!");
     public static final NetworkState RETRY = new NetworkState(Status.RETRY, "Retrying");

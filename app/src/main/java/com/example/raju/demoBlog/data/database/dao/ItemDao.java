@@ -1,6 +1,5 @@
 package com.example.raju.demoBlog.data.database.dao;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.paging.DataSource;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
@@ -18,7 +17,7 @@ public interface ItemDao {
     List<Long> insertItems(List<Item> items);
 
     @Query("SELECT id, item_id, title FROM item ORDER BY published_at DESC")
-    LiveData<List<Item>> fetchAllItemsOrdered();
+    DataSource.Factory<Integer, Item> fetchAllItemsOrdered();
 
     @Query("SELECT * FROM item")
     DataSource.Factory<Integer, Item> fetchAllItems();

@@ -5,7 +5,7 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.paging.DataSource;
 import android.util.Log;
 
-import com.example.raju.demoBlog.AppExecutors;
+import com.example.raju.demoBlog.Utils.AppExecutors;
 import com.example.raju.demoBlog.data.database.AppDatabase;
 import com.example.raju.demoBlog.data.database.dao.ItemDao;
 import com.example.raju.demoBlog.data.database.dao.ItemTagsDao;
@@ -20,19 +20,18 @@ import com.example.raju.demoBlog.data.network.ApiCallback;
 import com.example.raju.demoBlog.data.network.ApiClient;
 import com.example.raju.demoBlog.data.network.NetworkState;
 import com.example.raju.demoBlog.data.network.RetryCallback;
-import com.example.raju.demoBlog.ui.recyclerview.RetryListener;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import retrofit2.Call;
 
-public class ApiRepository {
+public class ItemRepository {
 
-    private static final String TAG = ApiRepository.class.getSimpleName();
+    private static final String TAG = ItemRepository.class.getSimpleName();
 
     private static final Object LOCK = new Object();
-    private static ApiRepository sInstance;
+    private static ItemRepository sInstance;
 
     private final ApiClient mClient;
     private final AppExecutors mExecutors;
@@ -46,9 +45,8 @@ public class ApiRepository {
     private final AppDatabase database;
 
     private RetryCallback<BaseModel> retryCallback;
-    private RetryListener listener;
 
-    private ApiRepository(ApiClient client, AppDatabase database, AppExecutors executors) {
+    private ItemRepository(ApiClient client, AppDatabase database, AppExecutors executors) {
         this.database = database;
         mClient = client;
         mExecutors = executors;
@@ -60,11 +58,11 @@ public class ApiRepository {
         networkStateObservable = new MutableLiveData<>();
     }
 
-    public static ApiRepository getInstance(ApiClient client, AppDatabase database, AppExecutors executors) {
+    public static ItemRepository getInstance(ApiClient client, AppDatabase database, AppExecutors executors) {
         if (sInstance == null) {
             synchronized (LOCK) {
                 if (sInstance == null) {
-                    sInstance = new ApiRepository(client, database, executors);
+                    sInstance = new ItemRepository(client, database, executors);
                 }
             }
         }
@@ -73,7 +71,7 @@ public class ApiRepository {
 
     public void getFirstCallback() {
         if (isFetchNeeded()) {
-            mClient.fetchFirstNetworkCall().enqueue(getRetrofitCallback());
+            mClient.getFirstNetworkCall().enqueue(getRetrofitCallback());
         }
     }
 
@@ -91,7 +89,7 @@ public class ApiRepository {
         String nextPageToken = getDbPageToken();
         if (nextPageToken != null) {
             networkStateObservable.setValue(NetworkState.LOADING);
-            mClient.fetchNextNetworkCall(nextPageToken).enqueue(getRetrofitCallback());
+            mClient.getNextNetworkCall(nextPageToken).enqueue(getRetrofitCallback());
         }
     }
 
@@ -145,7 +143,7 @@ public class ApiRepository {
                     insertTags(labelName);
                     // Get the id of the tag name
                     int tagId = fetchTagId(labelName);
-                    // Insert the relational database
+                    // Insert the relational mDatabase
                     insetItemTagRelation(itemId, tagId);
                 }
             } else {
